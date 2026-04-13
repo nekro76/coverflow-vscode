@@ -6,7 +6,7 @@
     "publisher": "yourname",
     "repository": {
         "type": "git",
-        "url": "https://github.com//coverflow-vscode.git"
+        "url": "https://github.com/nekro76/coverflow-vscode.git"
     },
     "engines": {
         "vscode": "^1.75.0"
@@ -16,7 +16,7 @@
         "Media"
     ],
     "activationEvents": [
-        "*"
+        "onStartupFinished"
     ],
     "main": "./out/extension.js",
     "files": [
