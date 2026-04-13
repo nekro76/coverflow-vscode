@@ -61,6 +61,75 @@
         });
 
         let isTransitioning = false;
+        let startX = 0;
+        let isDragging = false;
+
+        window.addEventListener('keydown', event => {
+            if (isTransitioning) return;
+            switch (event.key) {
+                case 'ArrowLeft':
+                    previous();
+                    break;
+                case 'ArrowRight':
+                    next();
+                    break;
+                case ' ':
+                    togglePlay();
+                    break;
+            }
+        });
+
+        // Mouse/Touch Gestures
+        const carouselContainer = document.querySelector('.carousel-container');
+        
+        carouselContainer.addEventListener('mousedown', e => {
+            startX = e.pageX;
+            isDragging = true;
+        });
+
+        window.addEventListener('mousemove', e => {
+            if (!isDragging || isTransitioning) return;
+            const currentX = e.pageX;
+            const diff = currentX - startX;
+            
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                    previous();
+                } else {
+                    next();
+                }
+                isDragging = false;
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Touch Support
+        carouselContainer.addEventListener('touchstart', e => {
+            startX = e.touches[0].pageX;
+            isDragging = true;
+        });
+
+        carouselContainer.addEventListener('touchmove', e => {
+            if (!isDragging || isTransitioning) return;
+            const currentX = e.touches[0].pageX;
+            const diff = currentX - startX;
+            
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                    previous();
+                } else {
+                    next();
+                }
+                isDragging = false;
+            }
+        });
+
+        carouselContainer.addEventListener('touchend', () => {
+            isDragging = false;
+        });
 
         function handleTrackUpdate(track, isPlaying) {
             const titleEl = document.getElementById('title');
