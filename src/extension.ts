@@ -64,8 +64,8 @@ export function activate(context: vscode.ExtensionContext): void {
     statusBarItem.show();
 
     statusBarPrevious = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Right,
-        90
+        vscode.StatusBarAlignment.Left,
+        99
     );
     statusBarPrevious.command = 'coverflow.previous';
     statusBarPrevious.text = '$(chevron-left)';
@@ -73,8 +73,8 @@ export function activate(context: vscode.ExtensionContext): void {
     statusBarPrevious.show();
 
     statusBarPlayPause = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Right,
-        80
+        vscode.StatusBarAlignment.Left,
+        98
     );
     statusBarPlayPause.command = 'coverflow.togglePlayPause';
     statusBarPlayPause.text = '$(play)';
@@ -82,8 +82,8 @@ export function activate(context: vscode.ExtensionContext): void {
     statusBarPlayPause.show();
 
     statusBarNext = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Right,
-        70
+        vscode.StatusBarAlignment.Left,
+        97
     );
     statusBarNext.command = 'coverflow.next';
     statusBarNext.text = '$(chevron-right)';
@@ -270,9 +270,22 @@ function getPanelHtml(webview: vscode.Webview, context: vscode.ExtensionContext)
     const stylePath = vscode.Uri.file(path.join(context.extensionPath, 'media', 'coverflow.css'));
     const styleUri = webview.asWebviewUri(stylePath);
 
+    const nonce = getNonce();
+
     html = html.replace('{styleUri}', styleUri.toString());
+    html = html.replace('{cspSource}', webview.cspSource);
+    html = html.replace(/{nonce}/g, nonce);
 
     return html;
+}
+
+function getNonce() {
+    let text = '';
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    for (let i = 0; i < 32; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
 }
 
 export function deactivate(): void {
