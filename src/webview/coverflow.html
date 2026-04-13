@@ -15,7 +15,6 @@
 
     <div class="carousel-container">
         <div id="carousel" class="carousel">
-            <!-- Cards will be injected here -->
             <div id="card-left" class="card left">
                 <img src="" class="cover-art">
                 <div class="placeholder">🎵</div>
@@ -50,49 +49,78 @@
 
     <script>
         const vscode = acquireVsCodeApi();
+        let currentTrack = null;
         
         window.addEventListener('message', event => {
             const message = event.data;
             switch (message.type) {
                 case 'trackUpdate':
-                    updateUI(message.track, message.isPlaying);
+                    handleTrackUpdate(message.track, message.isPlaying);
                     break;
             }
         });
 
-        function updateUI(track, isPlaying) {
+        let isTransitioning = false;
+
+        function handleTrackUpdate(track, isPlaying) {
             const titleEl = document.getElementById('title');
             const artistEl = document.getElementById('artist');
             const playBtn = document.getElementById('playBtn');
+            const carousel = document.getElementById('carousel');
             
-            // Carousel cards
-            const centerArt = document.querySelector('#card-center .cover-art');
-            const centerPlaceholder = document.querySelector('#card-center .placeholder');
-
+            // If track changed, we might want to animate a shift
+            if (currentTrack && track && currentTrack.name !== track.name) {
+                // If not already transitioning (via user interaction), we show a simple update
+                if (!isTransitioning) {
+                   updateCard('center', track);
+                }
+            } else {
+                updateCard('center', track);
+            }
+            
             if (track) {
                 titleEl.textContent = track.name;
                 artistEl.textContent = track.artist + ' - ' + track.album;
-                
-                if (track.artworkBase64) {
-                    centerArt.src = 'data:image/png;base64,' + track.artworkBase64;
-                    centerArt.style.display = 'block';
-                    centerPlaceholder.style.display = 'none';
-                } else {
-                    centerArt.style.display = 'none';
-                    centerPlaceholder.style.display = 'flex';
-                }
+                currentTrack = track;
             } else {
                 titleEl.textContent = 'Not Playing';
                 artistEl.textContent = '';
-                centerArt.style.display = 'none';
-                centerPlaceholder.style.display = 'flex';
+                currentTrack = null;
             }
 
             playBtn.textContent = isPlaying ? '⏸' : '▶️';
+            isTransitioning = false;
+            carousel.classList.remove('slide-left', 'slide-right');
         }
 
-        function previous() { vscode.postMessage({ command: 'previous' }); }
-        function next() { vscode.postMessage({ command: 'next' }); }
+        function updateCard(position, track) {
+            const cardArt = document.querySelector(`#card-${position} .cover-art`);
+            const cardPlaceholder = document.querySelector(`#card-${position} .placeholder`);
+
+            if (track && track.artworkBase64) {
+                cardArt.src = 'data:image/png;base64,' + track.artworkBase64;
+                cardArt.style.display = 'block';
+                cardPlaceholder.style.display = 'none';
+            } else {
+                cardArt.style.display = 'none';
+                cardPlaceholder.style.display = 'flex';
+            }
+        }
+
+        function previous() { 
+            if (isTransitioning) return;
+            isTransitioning = true;
+            document.getElementById('carousel').classList.add('slide-right');
+            vscode.postMessage({ command: 'previous' }); 
+        }
+        
+        function next() { 
+            if (isTransitioning) return;
+            isTransitioning = true;
+            document.getElementById('carousel').classList.add('slide-left');
+            vscode.postMessage({ command: 'next' }); 
+        }
+
         function togglePlay() { vscode.postMessage({ command: 'togglePlayPause' }); }
         function toggleShuffle() { vscode.postMessage({ command: 'toggleShuffle' }); }
         function toggleRepeat() { vscode.postMessage({ command: 'toggleRepeat' }); }

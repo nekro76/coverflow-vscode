@@ -104,6 +104,27 @@ body {
     opacity: 0.6;
 }
 
+/* Animation States */
+.carousel.slide-left .card.center {
+    transform: translateX(calc(-1 * var(--card-spacing))) scale(0.7) rotateY(50deg);
+    opacity: 0.6;
+}
+
+.carousel.slide-left .card.right {
+    transform: translateX(0) scale(1) rotateY(0deg);
+    opacity: 1;
+}
+
+.carousel.slide-right .card.center {
+    transform: translateX(var(--card-spacing)) scale(0.7) rotateY(-50deg);
+    opacity: 0.6;
+}
+
+.carousel.slide-right .card.left {
+    transform: translateX(0) scale(1) rotateY(0deg);
+    opacity: 1;
+}
+
 /* Info & Controls */
 .track-info {
     text-align: center;
