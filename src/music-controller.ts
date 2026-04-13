@@ -12,6 +12,11 @@ export interface Track {
     artworkBase64?: string;
 }
 
+export interface Playlist {
+    name: string;
+    id: string;
+}
+
 export async function runAppleScript(script: string): Promise<string> {
     try {
         const { stdout } = await execPromise(`osascript -e '${script}'`, {
@@ -92,11 +97,8 @@ export async function getCurrentTrack(): Promise<Track | null> {
 
 /**
  * Robustly fetches artwork as Base64.
- * Tries to get the raw data and then parses the hex output.
  */
 export async function getArtworkBase64(): Promise<string | null> {
-    // We attempt to get the raw data. AppleScript will return it as a hex-encoded string
-    // wrapped in «data XXXX...»
     const script = `
         tell app "Music"
             if (count of artworks of current track) > 0 then
@@ -110,7 +112,7 @@ export async function getArtworkBase64(): Promise<string | null> {
     try {
         const { stdout } = await execPromise(`osascript -e '${script}'`, {
             timeout: 15000,
-            maxBuffer: 10 * 1024 * 1024 // 10MB buffer for large artworks
+            maxBuffer: 10 * 1024 * 1024
         });
 
         const output = stdout.trim();
@@ -118,9 +120,6 @@ export async function getArtworkBase64(): Promise<string | null> {
             return null;
         }
 
-        // The output format is «data TYPEHEXDATA» 
-        // Example: «data JPEGFFD8...» or «data PNGf8950...»
-        // We match the hex part after the type (JPEG, PNGf, etc.)
         const match = output.match(/«data [A-Za-z]+([0-9A-Fa-f]+)»/);
         if (match && match[1]) {
             return Buffer.from(match[1], 'hex').toString('base64');
@@ -213,4 +212,70 @@ export async function getPlayerPosition(): Promise<number> {
         end tell
     `);
     return parseFloat(result) || 0;
+}
+
+/**
+ * Fetches all playlists from Music.app library.
+ */
+export async function getPlaylists(): Promise<Playlist[]> {
+    const result = await runAppleScript(`
+        tell app "Music"
+            set playlistNames to name of user playlists
+            set playlistIds to persistent ID of user playlists
+            set output to ""
+            repeat with i from 1 to count of playlistNames
+                set output to output & item i of playlistNames & "|||" & item i of playlistIds & "###"
+            end repeat
+            return output
+        end tell
+    `);
+
+    if (!result) return [];
+    
+    return result.split('###')
+        .filter(p => p.trim() !== '')
+        .map(p => {
+            const [name, id] = p.split('|||');
+            return { name, id };
+        });
+}
+
+/**
+ * Fetches tracks from a specific playlist.
+ */
+export async function getPlaylistTracks(playlistId: string): Promise<Track[]> {
+    const result = await runAppleScript(`
+        tell app "Music"
+            set targetPlaylist to some playlist whose persistent ID is "${playlistId}"
+            set trackNames to name of tracks of targetPlaylist
+            set trackArtists to artist of tracks of targetPlaylist
+            set trackAlbums to album of tracks of targetPlaylist
+            set output to ""
+            repeat with i from 1 to count of trackNames
+                set output to output & item i of trackNames & "|||" & item i of trackArtists & "|||" & item i of trackAlbums & "###"
+            end repeat
+            return output
+        end tell
+    `);
+
+    if (!result) return [];
+
+    return result.split('###')
+        .filter(t => t.trim() !== '')
+        .map(t => {
+            const [name, artist, album] = t.split('|||');
+            return { name, artist, album, duration: 0 };
+        });
+}
+
+/**
+ * Plays a specific track from a playlist.
+ */
+export async function playTrack(playlistId: string, trackName: string): Promise<void> {
+    await runAppleScript(`
+        tell app "Music"
+            set targetPlaylist to some playlist whose persistent ID is "${playlistId}"
+            play track "${trackName}" of targetPlaylist
+        end tell
+    `);
 }

@@ -8,8 +8,19 @@
     <div class="header">
         <span class="title">CoverFlow</span>
         <div class="header-actions">
+            <button class="icon-btn" onclick="toggleLibrary()" title="Library">📚</button>
             <button class="icon-btn" onclick="toggleShuffle()" title="Shuffle">🔀</button>
             <button class="icon-btn" onclick="toggleRepeat()" title="Repeat">🔁</button>
+        </div>
+    </div>
+
+    <div id="libraryOverlay" class="library-overlay" style="display: none;">
+        <div class="library-header">
+            <button onclick="toggleLibrary()">Back</button>
+            <span id="libraryTitle">Playlists</span>
+        </div>
+        <div id="libraryContent" class="library-content">
+            <!-- Playlists or Tracks will be here -->
         </div>
     </div>
 
@@ -50,85 +61,24 @@
     <script>
         const vscode = acquireVsCodeApi();
         let currentTrack = null;
-        
+        let isTransitioning = false;
+        let startX = 0;
+        let isDragging = false;
+        let currentPlaylistId = null;
+
         window.addEventListener('message', event => {
             const message = event.data;
             switch (message.type) {
                 case 'trackUpdate':
                     handleTrackUpdate(message.track, message.isPlaying);
                     break;
-            }
-        });
-
-        let isTransitioning = false;
-        let startX = 0;
-        let isDragging = false;
-
-        window.addEventListener('keydown', event => {
-            if (isTransitioning) return;
-            switch (event.key) {
-                case 'ArrowLeft':
-                    previous();
+                case 'playlists':
+                    displayPlaylists(message.playlists);
                     break;
-                case 'ArrowRight':
-                    next();
-                    break;
-                case ' ':
-                    togglePlay();
+                case 'playlistTracks':
+                    displayTracks(message.tracks, message.playlistId);
                     break;
             }
-        });
-
-        // Mouse/Touch Gestures
-        const carouselContainer = document.querySelector('.carousel-container');
-        
-        carouselContainer.addEventListener('mousedown', e => {
-            startX = e.pageX;
-            isDragging = true;
-        });
-
-        window.addEventListener('mousemove', e => {
-            if (!isDragging || isTransitioning) return;
-            const currentX = e.pageX;
-            const diff = currentX - startX;
-            
-            if (Math.abs(diff) > 50) {
-                if (diff > 0) {
-                    previous();
-                } else {
-                    next();
-                }
-                isDragging = false;
-            }
-        });
-
-        window.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
-
-        // Touch Support
-        carouselContainer.addEventListener('touchstart', e => {
-            startX = e.touches[0].pageX;
-            isDragging = true;
-        });
-
-        carouselContainer.addEventListener('touchmove', e => {
-            if (!isDragging || isTransitioning) return;
-            const currentX = e.touches[0].pageX;
-            const diff = currentX - startX;
-            
-            if (Math.abs(diff) > 50) {
-                if (diff > 0) {
-                    previous();
-                } else {
-                    next();
-                }
-                isDragging = false;
-            }
-        });
-
-        carouselContainer.addEventListener('touchend', () => {
-            isDragging = false;
         });
 
         function handleTrackUpdate(track, isPlaying) {
@@ -137,9 +87,7 @@
             const playBtn = document.getElementById('playBtn');
             const carousel = document.getElementById('carousel');
             
-            // If track changed, we might want to animate a shift
             if (currentTrack && track && currentTrack.name !== track.name) {
-                // If not already transitioning (via user interaction), we show a simple update
                 if (!isTransitioning) {
                    updateCard('center', track);
                 }
@@ -176,6 +124,60 @@
             }
         }
 
+        // Library Logic
+        function toggleLibrary() {
+            const overlay = document.getElementById('libraryOverlay');
+            if (overlay.style.display === 'none') {
+                overlay.style.display = 'flex';
+                vscode.postMessage({ command: 'getPlaylists' });
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function displayPlaylists(playlists) {
+            const content = document.getElementById('libraryContent');
+            const title = document.getElementById('libraryTitle');
+            title.textContent = 'Playlists';
+            content.innerHTML = '';
+            
+            playlists.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'library-item';
+                div.textContent = p.name;
+                div.onclick = () => {
+                    vscode.postMessage({ command: 'getPlaylistTracks', value: p.id });
+                };
+                content.appendChild(div);
+            });
+        }
+
+        function displayTracks(tracks, playlistId) {
+            const content = document.getElementById('libraryContent');
+            const title = document.getElementById('libraryTitle');
+            title.textContent = 'Tracks';
+            content.innerHTML = '';
+            currentPlaylistId = playlistId;
+
+            const backBtn = document.createElement('div');
+            backBtn.className = 'library-item back-item';
+            backBtn.textContent = '← Back to Playlists';
+            backBtn.onclick = () => vscode.postMessage({ command: 'getPlaylists' });
+            content.appendChild(backBtn);
+            
+            tracks.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'library-item';
+                div.innerHTML = `<div class="track-name">${t.name}</div><div class="track-meta">${t.artist}</div>`;
+                div.onclick = () => {
+                    vscode.postMessage({ command: 'playTrack', value: { playlistId, trackName: t.name } });
+                    toggleLibrary();
+                };
+                content.appendChild(div);
+            });
+        }
+
+        // Navigation
         function previous() { 
             if (isTransitioning) return;
             isTransitioning = true;
@@ -194,6 +196,28 @@
         function toggleShuffle() { vscode.postMessage({ command: 'toggleShuffle' }); }
         function toggleRepeat() { vscode.postMessage({ command: 'toggleRepeat' }); }
         function setVolume(value) { vscode.postMessage({ command: 'volume', value: parseInt(value) }); }
+
+        window.addEventListener('keydown', event => {
+            if (isTransitioning) return;
+            switch (event.key) {
+                case 'ArrowLeft': previous(); break;
+                case 'ArrowRight': next(); break;
+                case ' ': togglePlay(); break;
+            }
+        });
+
+        // Gestures
+        const carouselContainer = document.querySelector('.carousel-container');
+        carouselContainer.addEventListener('mousedown', e => { startX = e.pageX; isDragging = true; });
+        window.addEventListener('mousemove', e => {
+            if (!isDragging || isTransitioning) return;
+            const diff = e.pageX - startX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) previous(); else next();
+                isDragging = false;
+            }
+        });
+        window.addEventListener('mouseup', () => { isDragging = false; });
 
         // Initial request
         vscode.postMessage({ command: 'getTrack' });

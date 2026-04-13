@@ -205,7 +205,7 @@ async function updatePanel(): Promise<void> {
     }
 }
 
-async function handlePanelMessage(msg: { command: string; value?: number }): Promise<void> {
+async function handlePanelMessage(msg: { command: string; value?: any }): Promise<void> {
     switch (msg.command) {
         case 'play':
             await music.play();
@@ -222,11 +222,10 @@ async function handlePanelMessage(msg: { command: string; value?: number }): Pro
         case 'previous':
             await music.previousTrack();
             break;
-        case 'volumeUp':
-            await music.volumeUp();
-            break;
-        case 'volumeDown':
-            await music.volumeDown();
+        case 'volume':
+            if (typeof msg.value === 'number') {
+                await music.setVolume(msg.value);
+            }
             break;
         case 'toggleShuffle':
             await music.toggleShuffle();
@@ -236,6 +235,23 @@ async function handlePanelMessage(msg: { command: string; value?: number }): Pro
             break;
         case 'getTrack':
             await updatePanel();
+            break;
+        case 'getPlaylists':
+            const playlists = await music.getPlaylists();
+            panel?.webview.postMessage({ type: 'playlists', playlists });
+            break;
+        case 'getPlaylistTracks':
+            if (msg.value) {
+                const tracks = await music.getPlaylistTracks(msg.value);
+                panel?.webview.postMessage({ type: 'playlistTracks', tracks, playlistId: msg.value });
+            }
+            break;
+        case 'playTrack':
+            if (msg.value && msg.value.playlistId && msg.value.trackName) {
+                await music.playTrack(msg.value.playlistId, msg.value.trackName);
+                await updateAllStatusBars();
+                await updatePanel();
+            }
             break;
     }
     await updateAllStatusBars();
