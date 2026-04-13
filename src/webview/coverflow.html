@@ -18,6 +18,7 @@
         <div class="library-header">
             <button onclick="toggleLibrary()">Back</button>
             <span id="libraryTitle">Playlists</span>
+            <input type="text" id="librarySearch" placeholder="Search..." oninput="filterLibrary(this.value)">
         </div>
         <div id="libraryContent" class="library-content">
             <!-- Playlists or Tracks will be here -->
@@ -174,6 +175,15 @@
                     toggleLibrary();
                 };
                 content.appendChild(div);
+            });
+        }
+
+        function filterLibrary(query) {
+            const items = document.querySelectorAll('.library-item:not(.back-item)');
+            const q = query.toLowerCase();
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(q) ? 'block' : 'none';
             });
         }
 
