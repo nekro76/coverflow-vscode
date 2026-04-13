@@ -21,7 +21,11 @@
     "main": "./out/extension.js",
     "files": [
         "out",
-        "package.json"
+        "package.json",
+        "media",
+        "src/webview",
+        "LICENSE",
+        "README.md"
     ],
     "contributes": {
         "commands": [
