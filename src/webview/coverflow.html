@@ -82,7 +82,9 @@
             }
         });
 
-        function handleTrackUpdate(track, isPlaying) {
+        function handleTrackUpdate(message) {
+            const track = message.track;
+            const isPlaying = message.isPlaying;
             const titleEl = document.getElementById('title');
             const artistEl = document.getElementById('artist');
             const playBtn = document.getElementById('playBtn');
@@ -107,6 +109,25 @@
             }
 
             playBtn.textContent = isPlaying ? '⏸' : '▶️';
+            
+            // Update Shuffle/Repeat states
+            const shuffleBtn = document.querySelector('button[title="Shuffle"]');
+            const repeatBtn = document.querySelector('button[title="Repeat"]');
+            
+            if (message.shuffleEnabled) {
+                shuffleBtn.classList.add('active');
+            } else {
+                shuffleBtn.classList.remove('active');
+            }
+            
+            if (message.repeatMode !== 'off') {
+                repeatBtn.classList.add('active');
+                repeatBtn.textContent = message.repeatMode === 'one' ? '🔂' : '🔁';
+            } else {
+                repeatBtn.classList.remove('active');
+                repeatBtn.textContent = '🔁';
+            }
+
             isTransitioning = false;
             carousel.classList.remove('slide-left', 'slide-right');
         }
