@@ -143,8 +143,18 @@ export function activate(context: vscode.ExtensionContext): void {
             }
 
             if (panel) {
-                panel.reveal(viewColumn);
-            } else {
+                try {
+                    panel.reveal(viewColumn);
+                } catch (e) {
+                    console.error('Failed to reveal panel:', e);
+                    // If reveal fails, it might be disposed, so let's try to recreate it
+                    panel = undefined;
+                    // Note: In a real scenario, you might want to trigger the 'else' block logic here
+                    // but for simplicity, we'll just let the user click again or handle it in next turn.
+                }
+            }
+            
+            if (!panel) {
                 panel = vscode.window.createWebviewPanel(
                     'coverflowPanel',
                     'CoverFlow',
@@ -192,7 +202,11 @@ export function activate(context: vscode.ExtensionContext): void {
 }
 
 async function updatePanel(): Promise<void> {
-    if (panel) {
+    if (!panel) {
+        return;
+    }
+
+    try {
         const track = await music.getCurrentTrack();
         const isPlaying = await music.isPlaying();
         const artworkBase64 = track ? await music.getArtworkBase64() : null;
@@ -200,7 +214,7 @@ async function updatePanel(): Promise<void> {
         const repeatMode = await music.getRepeatMode();
         const volume = await music.getVolume();
         
-        panel.webview.postMessage({
+        await panel.webview.postMessage({
             type: 'trackUpdate',
             track: track ? { ...track, artworkBase64 } : null,
             isPlaying: isPlaying,
@@ -208,6 +222,12 @@ async function updatePanel(): Promise<void> {
             repeatMode: repeatMode,
             volume: volume
         });
+    } catch (error) {
+        console.error('Failed to update panel:', error);
+        // If it failed because it's disposed, make sure we know
+        if (error instanceof Error && error.message.includes('disposed')) {
+            panel = undefined;
+        }
     }
 }
 
@@ -244,12 +264,20 @@ async function handlePanelMessage(msg: { command: string; value?: any }): Promis
             break;
         case 'getPlaylists':
             const playlists = await music.getPlaylists();
-            panel?.webview.postMessage({ type: 'playlists', playlists });
+            try {
+                await panel?.webview.postMessage({ type: 'playlists', playlists });
+            } catch (e) {
+                console.error('Failed to post playlists:', e);
+            }
             break;
         case 'getPlaylistTracks':
             if (msg.value) {
                 const tracks = await music.getPlaylistTracks(msg.value);
-                panel?.webview.postMessage({ type: 'playlistTracks', tracks, playlistId: msg.value });
+                try {
+                    await panel?.webview.postMessage({ type: 'playlistTracks', tracks, playlistId: msg.value });
+                } catch (e) {
+                    console.error('Failed to post playlist tracks:', e);
+                }
             }
             break;
         case 'playTrack':
