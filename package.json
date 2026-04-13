@@ -1,0 +1,109 @@
+{
+    "name": "coverflow-vscode",
+    "displayName": "CoverFlow",
+    "description": "Apple Music player with CoverFlow UI for VSCode on macOS",
+    "version": "0.0.1",
+    "publisher": "yourname",
+    "engines": {
+        "vscode": "^1.75.0"
+    },
+    "categories": [
+        "Other",
+        "Media"
+    ],
+    "activationEvents": [
+        "*"
+    ],
+    "main": "./out/extension.js",
+    "files": [
+        "out",
+        "package.json"
+    ],
+    "contributes": {
+        "commands": [
+            {
+                "command": "coverflow.play",
+                "title": "CoverFlow: Play",
+                "category": "CoverFlow"
+            },
+            {
+                "command": "coverflow.pause",
+                "title": "CoverFlow: Pause",
+                "category": "CoverFlow"
+            },
+            {
+                "command": "coverflow.togglePlayPause",
+                "title": "CoverFlow: Toggle Play/Pause",
+                "category": "CoverFlow"
+            },
+            {
+                "command": "coverflow.next",
+                "title": "CoverFlow: Next Track",
+                "category": "CoverFlow"
+            },
+            {
+                "command": "coverflow.previous",
+                "title": "CoverFlow: Previous Track",
+                "category": "CoverFlow"
+            },
+            {
+                "command": "coverflow.showPanel",
+                "title": "CoverFlow: Show Panel",
+                "category": "CoverFlow"
+            },
+            {
+                "command": "coverflow.volumeUp",
+                "title": "CoverFlow: Volume Up",
+                "category": "CoverFlow"
+            },
+            {
+                "command": "coverflow.volumeDown",
+                "title": "CoverFlow: Volume Down",
+                "category": "CoverFlow"
+            },
+            {
+                "command": "coverflow.toggleShuffle",
+                "title": "CoverFlow: Toggle Shuffle",
+                "category": "CoverFlow"
+            },
+            {
+                "command": "coverflow.toggleRepeat",
+                "title": "CoverFlow: Toggle Repeat",
+                "category": "CoverFlow"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "coverflow.play",
+                "key": "cmd+shift+p",
+                "mac": "cmd+shift+p",
+                "when": "!editorFocus"
+            }
+        ],
+        "configuration": {
+            "title": "CoverFlow",
+            "properties": {
+                "coverflow.showInStatusBar": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Show current track in status bar"
+                }
+            }
+        }
+    },
+    "scripts": {
+        "build": "tsc -p .",
+        "watch": "tsc -p . --watch",
+        "package": "vsce package",
+        "test": "jest"
+    },
+    "devDependencies": {
+        "@types/jest": "^30.0.0",
+        "@types/node": "^20.0.0",
+        "@types/vscode": "^1.75.0",
+        "@vscode/vsce": "^3.7.1",
+        "jest": "^30.3.0",
+        "ts-jest": "^29.4.9",
+        "typescript": "^5.0.0"
+    }
+}

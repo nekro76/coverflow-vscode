@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="{styleUri}">
+</head>
+<body>
+    <div class="header">
+        <span class="title">CoverFlow</span>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="toggleShuffle()" title="Shuffle">🔀</button>
+            <button class="icon-btn" onclick="toggleRepeat()" title="Repeat">🔁</button>
+        </div>
+    </div>
+
+    <div class="carousel-container">
+        <div id="carousel" class="carousel">
+            <!-- Cards will be injected here -->
+            <div id="card-left" class="card left">
+                <img src="" class="cover-art">
+                <div class="placeholder">🎵</div>
+            </div>
+            <div id="card-center" class="card center">
+                <img src="" class="cover-art">
+                <div class="placeholder">🎵</div>
+            </div>
+            <div id="card-right" class="card right">
+                <img src="" class="cover-art">
+                <div class="placeholder">🎵</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="track-info">
+        <div class="track-title" id="title">Loading...</div>
+        <div class="track-artist" id="artist"></div>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn" onclick="previous()">⏮</button>
+        <button class="play-btn" id="playBtn" onclick="togglePlay()">⏸</button>
+        <button class="control-btn" onclick="next()">⏭</button>
+    </div>
+
+    <div class="volume-container">
+        <span>🔈</span>
+        <input type="range" id="volumeSlider" min="0" max="100" value="50" oninput="setVolume(this.value)">
+        <span>🔊</span>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+        
+        window.addEventListener('message', event => {
+            const message = event.data;
+            switch (message.type) {
+                case 'trackUpdate':
+                    updateUI(message.track, message.isPlaying);
+                    break;
+            }
+        });
+
+        function updateUI(track, isPlaying) {
+            const titleEl = document.getElementById('title');
+            const artistEl = document.getElementById('artist');
+            const playBtn = document.getElementById('playBtn');
+            
+            // Carousel cards
+            const centerArt = document.querySelector('#card-center .cover-art');
+            const centerPlaceholder = document.querySelector('#card-center .placeholder');
+
+            if (track) {
+                titleEl.textContent = track.name;
+                artistEl.textContent = track.artist + ' - ' + track.album;
+                
+                if (track.artworkBase64) {
+                    centerArt.src = 'data:image/png;base64,' + track.artworkBase64;
+                    centerArt.style.display = 'block';
+                    centerPlaceholder.style.display = 'none';
+                } else {
+                    centerArt.style.display = 'none';
+                    centerPlaceholder.style.display = 'flex';
+                }
+            } else {
+                titleEl.textContent = 'Not Playing';
+                artistEl.textContent = '';
+                centerArt.style.display = 'none';
+                centerPlaceholder.style.display = 'flex';
+            }
+
+            playBtn.textContent = isPlaying ? '⏸' : '▶️';
+        }
+
+        function previous() { vscode.postMessage({ command: 'previous' }); }
+        function next() { vscode.postMessage({ command: 'next' }); }
+        function togglePlay() { vscode.postMessage({ command: 'togglePlayPause' }); }
+        function toggleShuffle() { vscode.postMessage({ command: 'toggleShuffle' }); }
+        function toggleRepeat() { vscode.postMessage({ command: 'toggleRepeat' }); }
+        function setVolume(value) { vscode.postMessage({ command: 'volume', value: parseInt(value) }); }
+
+        // Initial request
+        vscode.postMessage({ command: 'getTrack' });
+    </script>
+</body>
+</html>

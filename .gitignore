@@ -1,0 +1,16 @@
+node_modules/
+out/
+*.vsix
+.DS_Store
+*.log
+
+# Design & Planning (Ignored from repository)
+plan.md
+research.md
+project_context.md
+project_structure.md
+ai/
+tests/
+jest.config.js
+tsconfig.json
+package-lock.json
