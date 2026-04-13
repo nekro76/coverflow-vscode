@@ -128,6 +128,11 @@
                 repeatBtn.textContent = '🔁';
             }
 
+            // Update Volume Slider
+            if (typeof message.volume === 'number') {
+                document.getElementById('volumeSlider').value = message.volume;
+            }
+
             isTransitioning = false;
             carousel.classList.remove('slide-left', 'slide-right');
         }

@@ -198,13 +198,15 @@ async function updatePanel(): Promise<void> {
         const artworkBase64 = track ? await music.getArtworkBase64() : null;
         const shuffleEnabled = await music.getShuffleEnabled();
         const repeatMode = await music.getRepeatMode();
+        const volume = await music.getVolume();
         
         panel.webview.postMessage({
             type: 'trackUpdate',
             track: track ? { ...track, artworkBase64 } : null,
             isPlaying: isPlaying,
             shuffleEnabled: shuffleEnabled,
-            repeatMode: repeatMode
+            repeatMode: repeatMode,
+            volume: volume
         });
     }
 }
