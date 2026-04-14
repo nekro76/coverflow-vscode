@@ -19,11 +19,11 @@
         "onStartupFinished"
     ],
     "main": "./out/extension.js",
-    "files": [
+"files": [
         "out",
         "package.json",
-        "media",
-        "src/webview/*",
+        "media/**",
+        "src/webview/**",
         "LICENSE",
         "README.md"
     ],
