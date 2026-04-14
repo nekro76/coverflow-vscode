@@ -54,12 +54,6 @@
         <button class="control-btn" onclick="next()">⏭</button>
     </div>
 
-    <div class="volume-container">
-        <span>🔈</span>
-        <input type="range" id="volumeSlider" min="0" max="100" value="50" oninput="setVolume(this.value)">
-        <span>🔊</span>
-    </div>
-
     <script nonce="{nonce}">
         const vscode = acquireVsCodeApi();
         let currentTrack = null;
@@ -141,9 +135,10 @@
         function updateCard(position, track) {
             const cardArt = document.querySelector(`#card-${position} .cover-art`);
             const cardPlaceholder = document.querySelector(`#card-${position} .placeholder`);
-
+            
             if (track && track.artworkBase64) {
-                cardArt.src = 'data:image/png;base64,' + track.artworkBase64;
+                const mimeType = track.artworkMimeType || 'image/jpeg';
+                cardArt.src = `data:${mimeType};base64,${track.artworkBase64}`;
                 cardArt.style.display = 'block';
                 cardPlaceholder.style.display = 'none';
             } else {
