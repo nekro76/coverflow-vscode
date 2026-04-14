@@ -7,251 +7,83 @@
 </head>
 <body>
     <div class="header">
-        <span class="title">CoverFlow</span>
-        <div class="header-actions">
-            <button class="icon-btn" onclick="toggleLibrary()" title="Library">📚</button>
-            <button class="icon-btn" onclick="toggleShuffle()" title="Shuffle">🔀</button>
-            <button class="icon-btn" onclick="toggleRepeat()" title="Repeat">🔁</button>
-        </div>
+        <span class="title">Now Playing</span>
     </div>
 
-    <div id="libraryOverlay" class="library-overlay" style="display: none;">
-        <div class="library-header">
-            <button onclick="toggleLibrary()">Back</button>
-            <span id="libraryTitle">Playlists</span>
-            <input type="text" id="librarySearch" placeholder="Search..." oninput="filterLibrary(this.value)">
-        </div>
-        <div id="libraryContent" class="library-content">
-            <!-- Playlists or Tracks will be here -->
-        </div>
-    </div>
-
-    <div class="carousel-container">
-        <div id="carousel" class="carousel">
-            <div id="card-left" class="card left">
-                <img src="" class="cover-art">
-                <div class="placeholder">🎵</div>
-            </div>
-            <div id="card-center" class="card center">
-                <img src="" class="cover-art">
-                <div class="placeholder">🎵</div>
-            </div>
-            <div id="card-right" class="card right">
-                <img src="" class="cover-art">
-                <div class="placeholder">🎵</div>
-            </div>
-        </div>
+    <div class="artwork-container">
+        <img id="artwork" class="artwork" src="" alt="Album Art">
+        <div id="artworkPlaceholder" class="artwork-placeholder">🎵</div>
     </div>
 
     <div class="track-info">
-        <div class="track-title" id="title">Loading...</div>
+        <div class="track-title" id="title">No track playing</div>
         <div class="track-artist" id="artist"></div>
     </div>
 
     <div class="controls">
-        <button class="control-btn" onclick="previous()">⏮</button>
-        <button class="play-btn" id="playBtn" onclick="togglePlay()">⏸</button>
-        <button class="control-btn" onclick="next()">⏭</button>
+        <button id="prevBtn" class="control-btn">⏮</button>
+        <button id="playBtn" class="play-btn">▶️</button>
+        <button id="nextBtn" class="control-btn">⏭</button>
     </div>
 
     <script nonce="{nonce}">
         const vscode = acquireVsCodeApi();
-        let currentTrack = null;
-        let isTransitioning = false;
-        let startX = 0;
-        let isDragging = false;
-        let currentPlaylistId = null;
 
         window.addEventListener('message', event => {
             const message = event.data;
-            switch (message.type) {
-                case 'trackUpdate':
-                    handleTrackUpdate(message);
-                    break;
-                case 'playlists':
-                    displayPlaylists(message.playlists);
-                    break;
-                case 'playlistTracks':
-                    displayTracks(message.tracks, message.playlistId);
-                    break;
+            if (message.type === 'trackUpdate') {
+                handleTrackUpdate(message);
             }
         });
 
         function handleTrackUpdate(message) {
             const track = message.track;
             const isPlaying = message.isPlaying;
+            
             const titleEl = document.getElementById('title');
             const artistEl = document.getElementById('artist');
+            const artwork = document.getElementById('artwork');
+            const placeholder = document.getElementById('artworkPlaceholder');
             const playBtn = document.getElementById('playBtn');
-            const carousel = document.getElementById('carousel');
-            
-            if (currentTrack && track && currentTrack.name !== track.name) {
-                if (!isTransitioning) {
-                   updateCard('center', track);
-                }
-            } else {
-                updateCard('center', track);
-            }
-            
+
             if (track) {
                 titleEl.textContent = track.name;
-                artistEl.textContent = track.artist + ' - ' + track.album;
-                currentTrack = track;
+                artistEl.textContent = track.artist + (track.album ? ' - ' + track.album : '');
+                
+                if (track.artworkBase64) {
+                    const mimeType = track.artworkMimeType || 'image/jpeg';
+                    artwork.src = `data:${mimeType};base64,${track.artworkBase64}`;
+                    artwork.style.display = 'block';
+                    placeholder.style.display = 'none';
+                } else {
+                    artwork.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                }
             } else {
-                titleEl.textContent = 'Not Playing';
+                titleEl.textContent = 'No track playing';
                 artistEl.textContent = '';
-                currentTrack = null;
+                artwork.style.display = 'none';
+                placeholder.style.display = 'flex';
             }
 
             playBtn.textContent = isPlaying ? '⏸' : '▶️';
-            
-            // Update Shuffle/Repeat states
-            const shuffleBtn = document.querySelector('button[title="Shuffle"]');
-            const repeatBtn = document.querySelector('button[title="Repeat"]');
-            
-            if (message.shuffleEnabled) {
-                shuffleBtn.classList.add('active');
-            } else {
-                shuffleBtn.classList.remove('active');
-            }
-            
-            if (message.repeatMode !== 'off') {
-                repeatBtn.classList.add('active');
-                repeatBtn.textContent = message.repeatMode === 'one' ? '🔂' : '🔁';
-            } else {
-                repeatBtn.classList.remove('active');
-                repeatBtn.textContent = '🔁';
-            }
-
-            // Update Volume Slider
-            if (typeof message.volume === 'number') {
-                document.getElementById('volumeSlider').value = message.volume;
-            }
-
-            isTransitioning = false;
-            carousel.classList.remove('slide-left', 'slide-right');
         }
 
-        function updateCard(position, track) {
-            const cardArt = document.querySelector(`#card-${position} .cover-art`);
-            const cardPlaceholder = document.querySelector(`#card-${position} .placeholder`);
-            
-            if (track && track.artworkBase64) {
-                const mimeType = track.artworkMimeType || 'image/jpeg';
-                cardArt.src = `data:${mimeType};base64,${track.artworkBase64}`;
-                cardArt.style.display = 'block';
-                cardPlaceholder.style.display = 'none';
-            } else {
-                cardArt.style.display = 'none';
-                cardPlaceholder.style.display = 'flex';
-            }
-        }
-
-        // Library Logic
-        function toggleLibrary() {
-            const overlay = document.getElementById('libraryOverlay');
-            if (overlay.style.display === 'none') {
-                overlay.style.display = 'flex';
-                vscode.postMessage({ command: 'getPlaylists' });
-            } else {
-                overlay.style.display = 'none';
-            }
-        }
-
-        function displayPlaylists(playlists) {
-            const content = document.getElementById('libraryContent');
-            const title = document.getElementById('libraryTitle');
-            title.textContent = 'Playlists';
-            content.innerHTML = '';
-            
-            playlists.forEach(p => {
-                const div = document.createElement('div');
-                div.className = 'library-item';
-                div.textContent = p.name;
-                div.onclick = () => {
-                    vscode.postMessage({ command: 'getPlaylistTracks', value: p.id });
-                };
-                content.appendChild(div);
-            });
-        }
-
-        function displayTracks(tracks, playlistId) {
-            const content = document.getElementById('libraryContent');
-            const title = document.getElementById('libraryTitle');
-            title.textContent = 'Tracks';
-            content.innerHTML = '';
-            currentPlaylistId = playlistId;
-
-            const backBtn = document.createElement('div');
-            backBtn.className = 'library-item back-item';
-            backBtn.textContent = '← Back to Playlists';
-            backBtn.onclick = () => vscode.postMessage({ command: 'getPlaylists' });
-            content.appendChild(backBtn);
-            
-            tracks.forEach(t => {
-                const div = document.createElement('div');
-                div.className = 'library-item';
-                div.innerHTML = `<div class="track-name">${t.name}</div><div class="track-meta">${t.artist}</div>`;
-                div.onclick = () => {
-                    vscode.postMessage({ command: 'playTrack', value: { playlistId, trackName: t.name } });
-                    toggleLibrary();
-                };
-                content.appendChild(div);
-            });
-        }
-
-        function filterLibrary(query) {
-            const items = document.querySelectorAll('.library-item:not(.back-item)');
-            const q = query.toLowerCase();
-            items.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                item.style.display = text.includes(q) ? 'block' : 'none';
-            });
-        }
-
-        // Navigation
-        function previous() { 
-            if (isTransitioning) return;
-            isTransitioning = true;
-            document.getElementById('carousel').classList.add('slide-right');
-            vscode.postMessage({ command: 'previous' }); 
-        }
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            vscode.postMessage({ command: 'previous' });
+            vscode.postMessage({ command: 'getTrack' });
+        });
         
-        function next() { 
-            if (isTransitioning) return;
-            isTransitioning = true;
-            document.getElementById('carousel').classList.add('slide-left');
-            vscode.postMessage({ command: 'next' }); 
-        }
-
-        function togglePlay() { vscode.postMessage({ command: 'togglePlayPause' }); }
-        function toggleShuffle() { vscode.postMessage({ command: 'toggleShuffle' }); }
-        function toggleRepeat() { vscode.postMessage({ command: 'toggleRepeat' }); }
-        function setVolume(value) { vscode.postMessage({ command: 'volume', value: parseInt(value) }); }
-
-        window.addEventListener('keydown', event => {
-            if (isTransitioning) return;
-            switch (event.key) {
-                case 'ArrowLeft': previous(); break;
-                case 'ArrowRight': next(); break;
-                case ' ': togglePlay(); break;
-            }
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            vscode.postMessage({ command: 'next' });
+            vscode.postMessage({ command: 'getTrack' });
         });
 
-        // Gestures
-        const carouselContainer = document.querySelector('.carousel-container');
-        carouselContainer.addEventListener('mousedown', e => { startX = e.pageX; isDragging = true; });
-        window.addEventListener('mousemove', e => {
-            if (!isDragging || isTransitioning) return;
-            const diff = e.pageX - startX;
-            if (Math.abs(diff) > 50) {
-                if (diff > 0) previous(); else next();
-                isDragging = false;
-            }
+        document.getElementById('playBtn').addEventListener('click', () => {
+            vscode.postMessage({ command: 'togglePlayPause' });
+            vscode.postMessage({ command: 'getTrack' });
         });
-        window.addEventListener('mouseup', () => { isDragging = false; });
 
-        // Initial request
         vscode.postMessage({ command: 'getTrack' });
     </script>
 </body>
