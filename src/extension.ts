@@ -7,8 +7,10 @@ let statusBarItem: vscode.StatusBarItem;
 let statusBarPrevious: vscode.StatusBarItem;
 let statusBarPlayPause: vscode.StatusBarItem;
 let statusBarNext: vscode.StatusBarItem;
-let updateInterval: NodeJS.Timeout;
 let panel: vscode.WebviewPanel | undefined;
+let updateInterval: NodeJS.Timeout;
+let lastTrackName = '';
+let lastArtist = '';
 
 async function updateStatusBar(): Promise<void> {
     const track = await music.getCurrentTrack();
@@ -42,15 +44,34 @@ async function updateAllStatusBars(): Promise<void> {
     await updatePlayPauseButton();
 }
 
-function startStatusUpdates(): void {
-    updateAllStatusBars();
-    updateInterval = setInterval(() => updateAllStatusBars(), 2000);
+async function syncWithAppleMusic(): Promise<void> {
+    const track = await music.getCurrentTrack();
+    if (track) {
+        if (track.name !== lastTrackName || track.artist !== lastArtist) {
+            lastTrackName = track.name;
+            lastArtist = track.artist;
+            await updateAllStatusBars();
+            if (panel) {
+                await updatePanel();
+            }
+        }
+    } else {
+        if (lastTrackName !== '') {
+            lastTrackName = '';
+            lastArtist = '';
+            await updateAllStatusBars();
+            if (panel) {
+                await updatePanel();
+            }
+        }
+    }
 }
 
-function stopStatusUpdates(): void {
-    if (updateInterval) {
-        clearInterval(updateInterval);
-    }
+async function startStatusUpdates(): Promise<void> {
+    await syncWithAppleMusic();
+    updateInterval = setInterval(() => {
+        syncWithAppleMusic();
+    }, 10000);
 }
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -94,9 +115,6 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(statusBarPrevious);
     context.subscriptions.push(statusBarPlayPause);
     context.subscriptions.push(statusBarNext);
-    context.subscriptions.push({
-        dispose: stopStatusUpdates
-    });
 
     const commands = [
         vscode.commands.registerCommand('coverflow.play', async () => {
@@ -219,9 +237,6 @@ async function updatePanel(): Promise<void> {
         const track = await music.getCurrentTrack();
         const isPlaying = await music.isPlaying();
         const artwork = track ? await music.getArtwork() : null;
-        const shuffleEnabled = await music.getShuffleEnabled();
-        const repeatMode = await music.getRepeatMode();
-        const volume = await music.getVolume();
         
         await panel.webview.postMessage({
             type: 'trackUpdate',
@@ -230,14 +245,15 @@ async function updatePanel(): Promise<void> {
                 artworkBase64: artwork?.base64 || null,
                 artworkMimeType: artwork?.mimeType || 'image/jpeg'
             } : null,
+            prevTrack: null,
+            nextTrack: null,
             isPlaying: isPlaying,
-            shuffleEnabled: shuffleEnabled,
-            repeatMode: repeatMode,
-            volume: volume
+            shuffleEnabled: false,
+            repeatMode: 'off',
+            volume: 50
         });
     } catch (error) {
         console.error('Failed to update panel:', error);
-        // If it failed because it's disposed, make sure we know
         if (error instanceof Error && error.message.includes('disposed')) {
             panel = undefined;
         }
@@ -246,12 +262,6 @@ async function updatePanel(): Promise<void> {
 
 async function handlePanelMessage(msg: { command: string; value?: any }): Promise<void> {
     switch (msg.command) {
-        case 'play':
-            await music.play();
-            break;
-        case 'pause':
-            await music.pause();
-            break;
         case 'togglePlayPause':
             await music.togglePlayPause();
             break;
@@ -261,44 +271,8 @@ async function handlePanelMessage(msg: { command: string; value?: any }): Promis
         case 'previous':
             await music.previousTrack();
             break;
-        case 'volume':
-            if (typeof msg.value === 'number') {
-                await music.setVolume(msg.value);
-            }
-            break;
-        case 'toggleShuffle':
-            await music.toggleShuffle();
-            break;
-        case 'toggleRepeat':
-            await music.toggleRepeat();
-            break;
         case 'getTrack':
             await updatePanel();
-            break;
-        case 'getPlaylists':
-            const playlists = await music.getPlaylists();
-            try {
-                await panel?.webview.postMessage({ type: 'playlists', playlists });
-            } catch (e) {
-                console.error('Failed to post playlists:', e);
-            }
-            break;
-        case 'getPlaylistTracks':
-            if (msg.value) {
-                const tracks = await music.getPlaylistTracks(msg.value);
-                try {
-                    await panel?.webview.postMessage({ type: 'playlistTracks', tracks, playlistId: msg.value });
-                } catch (e) {
-                    console.error('Failed to post playlist tracks:', e);
-                }
-            }
-            break;
-        case 'playTrack':
-            if (msg.value && msg.value.playlistId && msg.value.trackName) {
-                await music.playTrack(msg.value.playlistId, msg.value.trackName);
-                await updateAllStatusBars();
-                await updatePanel();
-            }
             break;
     }
     await updateAllStatusBars();
@@ -330,5 +304,7 @@ function getNonce() {
 }
 
 export function deactivate(): void {
-    stopStatusUpdates();
+    if (updateInterval) {
+        clearInterval(updateInterval);
+    }
 }
