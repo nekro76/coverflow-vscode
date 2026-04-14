@@ -143,36 +143,17 @@ export function activate(context: vscode.ExtensionContext): void {
             await updatePanel();
         }),
         vscode.commands.registerCommand('coverflow.showPanel', async () => {
-            const column = await vscode.window.showQuickPick(
-                ['Left (Primary)', 'Right (Next to Terminal)', 'Far Right'],
-                { placeHolder: 'Choose panel position' }
-            );
-            
-            if (!column) return;
-
-            let viewColumn: vscode.ViewColumn;
-            switch (column) {
-                case 'Right (Next to Terminal)':
-                    viewColumn = vscode.ViewColumn.Two;
-                    break;
-                case 'Far Right':
-                    viewColumn = vscode.ViewColumn.Three;
-                    break;
-                default:
-                    viewColumn = vscode.ViewColumn.One;
-            }
+            const viewColumn = vscode.ViewColumn.One;
 
             if (panel) {
                 try {
                     panel.reveal(viewColumn);
-                    return; // Successfully revealed
+                    return;
                 } catch (e) {
-                    console.error('Failed to reveal panel, likely disposed:', e);
                     panel = undefined;
                 }
             }
             
-            // Re-check after potential failure in reveal
             if (!panel) {
                 try {
                     const newPanel = vscode.window.createWebviewPanel(
@@ -274,12 +255,15 @@ async function handlePanelMessage(msg: { command: string; value?: any }): Promis
         case 'getTrack':
             await updatePanel();
             break;
+        
     }
     await updateAllStatusBars();
 }
 
 function getPanelHtml(webview: vscode.Webview, context: vscode.ExtensionContext): string {
-    const htmlPath = path.join(context.extensionPath, 'src', 'webview', 'coverflow.html');
+    const layout = vscode.workspace.getConfiguration('coverflow').get<string>('panelLayout') || 'horizontal';
+    const htmlFile = layout === 'vertical' ? 'coverflow-vertical.html' : 'coverflow.html';
+    const htmlPath = path.join(context.extensionPath, 'src', 'webview', htmlFile);
     let html = fs.readFileSync(htmlPath, 'utf8');
 
     const stylePath = vscode.Uri.file(path.join(context.extensionPath, 'media', 'coverflow.css'));

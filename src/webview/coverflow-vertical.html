@@ -5,27 +5,25 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {cspSource} 'unsafe-inline'; img-src {cspSource} data:; script-src 'nonce-{nonce}';">
     <link rel="stylesheet" type="text/css" href="{styleUri}">
 </head>
-<body class="horizontal">
+<body class="vertical">
     <div class="header">
         <span class="title">Now Playing</span>
     </div>
 
-    <div class="player-container">
-        <div class="artwork-container">
-            <img id="artwork" class="artwork" src="" alt="Album Art">
-            <div id="artworkPlaceholder" class="artwork-placeholder">🎵</div>
-        </div>
+    <div class="artwork-container">
+        <img id="artwork" class="artwork" src="" alt="Album Art">
+        <div id="artworkPlaceholder" class="artwork-placeholder">🎵</div>
+    </div>
 
-        <div class="track-info">
-            <div class="track-title" id="title">No track playing</div>
-            <div class="track-artist" id="artist"></div>
-        </div>
+    <div class="track-info">
+        <div class="track-title" id="title">No track playing</div>
+        <div class="track-artist" id="artist"></div>
+    </div>
 
-        <div class="controls">
-            <button id="prevBtn" class="control-btn">⏮</button>
-            <button id="playBtn" class="play-btn">▶</button>
-            <button id="nextBtn" class="control-btn">⏭</button>
-        </div>
+    <div class="controls">
+        <button id="prevBtn" class="control-btn">⏮</button>
+        <button id="playBtn" class="play-btn">▶</button>
+        <button id="nextBtn" class="control-btn">⏭</button>
     </div>
 
     <script nonce="{nonce}">

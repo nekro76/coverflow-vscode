@@ -23,7 +23,7 @@
         "out",
         "package.json",
         "media",
-        "src/webview",
+        "src/webview/*",
         "LICENSE",
         "README.md"
     ],
@@ -95,6 +95,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Show current track in status bar"
+                },
+                "coverflow.panelLayout": {
+                    "type": "string",
+                    "enum": ["horizontal", "vertical"],
+                    "default": "horizontal",
+                    "description": "Panel layout: horizontal (cover left) or vertical (centered stack)"
                 }
             }
         }
@@ -107,7 +113,7 @@
     },
     "devDependencies": {
         "@types/jest": "^30.0.0",
-        "@types/node": "^20.0.0",
+        "@types/node": "^20.19.39",
         "@types/vscode": "^1.75.0",
         "@vscode/vsce": "^3.7.1",
         "jest": "^30.3.0",
