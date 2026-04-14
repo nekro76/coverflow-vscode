@@ -1,6 +1,6 @@
 # CoverFlow VSCode Extension
 
-Apple Music player with CoverFlow UI for VSCode on macOS.
+Apple Music player for VSCode on macOS.
 
 ---
 
@@ -9,23 +9,13 @@ Apple Music player with CoverFlow UI for VSCode on macOS.
 - macOS 12.0+ (Monterey or later)
 - VSCode 1.75.0 or later
 - Apple Music app installed
-- **First run**: You may need to grant Automation permission for Music.app (macOS will prompt you)
+- **First run**: Grant Automation permission for Music.app when prompted
 
 ---
 
-## Quick Start
+## Installation
 
-### Option 1: Run in Development Mode (Recommended)
-
-```bash
-# Clone and install dependencies
-cd coverflow-vscode
-npm install
-```
-
-Then press **F5** in VSCode to launch the **Extension Development Host** (a new VSCode window with the extension loaded).
-
-### Option 2: Install Pre-built .vsix
+### Option 1: Install Pre-built .vsix
 
 1. Open VSCode
 2. Go to **Extensions** (Cmd+Shift+X)
@@ -33,47 +23,81 @@ Then press **F5** in VSCode to launch the **Extension Development Host** (a new 
 4. Select **Install from VSIX**
 5. Choose: `coverflow-vscode-0.0.1.vsix`
 
+### Option 2: Run in Development Mode
+
+```bash
+cd coverflow-vscode
+npm install
+```
+
+Press **F5** to launch Extension Development Host.
+
 ---
 
-## Current MVP Features
+## Features
 
-| Feature | Status | How to Test |
-|---------|--------|-------------|
-| Status bar item | ✅ Working | Look at bottom-left corner |
-| Play command | ✅ Working | Cmd+Shift+P → "CoverFlow: Play" |
-| Pause command | ✅ Working | Cmd+Shift+P → "CoverFlow: Pause" |
-| Next Track | ✅ Working | Cmd+Shift+P → "CoverFlow: Next Track" |
-| Previous Track | ✅ Working | Cmd+Shift+P → "CoverFlow: Previous Track" |
-| Show Panel | ✅ Working | Click status bar item |
-| Volume Up/Down | ✅ Working | Cmd+Shift+P → commands |
-| Shuffle/Repeat | ✅ Working | Cmd+Shift+P → commands |
-| Side panel UI | ⚠️ Basic | Shows placeholder text |
-| Album artwork | ❌ Not yet | Coming in Phase 3 |
-| CoverFlow carousel | ❌ Not yet | Coming in Phase 3 |
+| Feature | Status |
+|---------|--------|
+| Status bar with track info | ✅ |
+| Play/Pause/Next/Previous | ✅ |
+| Album artwork display | ✅ |
+| Two layout options | ✅ |
+| Auto-sync with Music.app | ✅ |
+
+---
+
+## Layout Options
+
+**Horizontal** (default - cover left, info center, controls right):
+```
+┌─────────────────────────────────────────────┐
+│  NOW PLAYING                                │
+├─────────────────────────────────────────────┤
+│ [🎵]  Song Title                   ⏮ ▶ ⏭  │
+│       Artist                               │
+└─────────────────────────────────────────────┘
+```
+
+**Vertical** (centered stack):
+```
+┌─────────────────────────┐
+│      Now Playing      │
+├─────────────────────────┤
+│                     │
+│   [Album Artwork]   │
+│                     │
+├─────────────────────────┤
+│  Song Title         │
+│  Artist - Album     │
+├─────────────────────────┤
+│  ⏮    ▶️    ⏭      │
+└─────────────────────────┘
+```
+
+**To change layout**: VSCode Settings → `coverflow.panelLayout` → select `horizontal` or `vertical`
 
 ---
 
 ## Commands
 
-All available via **Command Palette** (Cmd+Shift+P):
+Access via **Command Palette** (Cmd+Shift+P):
 
-- `CoverFlow: Play` - Play current track
-- `CoverFlow: Pause` - Pause playback
-- `CoverFlow: Next Track` - Skip to next
-- `CoverFlow: Previous Track` - Go to previous
-- `CoverFlow: Show Panel` - Open side panel
+- `CoverFlow: Play`
+- `CoverFlow: Pause`
+- `CoverFlow: Toggle Play/Pause`
+- `CoverFlow: Next Track`
+- `CoverFlow: Previous Track`
+- `CoverFlow: Show Panel`
 
-### Keyboard Shortcut
-
-- **Cmd+Shift+P** (when editor not focused) - Play/Pause toggle
+**Keyboard Shortcut**: `Cmd+Shift+P` (when editor not focused) - Play/Pause toggle
 
 ---
 
 ## Troubleshooting
 
-### "AppleScript error" or "Permission denied"
-- Open **System Settings → Privacy & Security → Automation**
-- Enable Automation for Music.app
+### "AppleScript error" or Permission denied
+1. Open **System Settings → Privacy & Security → Automation**
+2. Enable Automation for **Music.app**
 
 ### Extension not loading
 - Make sure you're on macOS
@@ -82,6 +106,15 @@ All available via **Command Palette** (Cmd+Shift+P):
 
 ### Status bar not showing
 - Check `coverflow.showInStatusBar` setting is enabled (default: true)
+
+---
+
+## Settings
+
+| Setting | Default | Description |
+|---------|---------|------------|
+| `coverflow.panelLayout` | `horizontal` | Panel layout: `horizontal` or `vertical` |
+| `coverflow.showInStatusBar` | `true` | Show current track in status bar |
 
 ---
 
@@ -94,9 +127,6 @@ npm install
 # Compile TypeScript
 npm run build
 
-# Watch for changes
-npm run watch
-
 # Package as .vsix
 npm run package
 ```
@@ -108,29 +138,25 @@ npm run package
 ```
 coverflow-vscode/
 ├── src/
-│   ├── extension.ts       # Entry point, registers commands & panel
-│   └── music-controller.ts # AppleScript integration
-├── package.json           # Extension manifest
-├── tsconfig.json          # TypeScript config
-└── coverflow-vscode-0.0.1.vsix  # Pre-built extension
+│   ├── extension.ts           ← Entry point
+│   ├── music-controller.ts   ← AppleScript integration
+│   └── webview/
+│       ├── coverflow.html           ← Horizontal layout
+│       └── coverflow-vertical.html  ← Vertical layout
+├── media/
+│   └── coverflow.css         ← Styles
+├── package.json             ← Manifest
+└── coverflow-vscode-0.0.1.vsix  ← Pre-built extension
 ```
 
 ---
 
-## Roadmap
+## Limitations
 
-| Phase | Status | Description |
-|-------|--------|-------------|
-| Phase 1: MVP | ✅ Done | Basic controls, status bar |
-| Phase 2: Side Panel | ⚠️ Basic | HTML panel (placeholder UI) |
-| Phase 3: CoverFlow | 🔜 In Progress | Full CoverFlow carousel UI |
-| Phase 4: Enhanced | 📋 Planned | Library browser, search |
-
-### Phase 3 Approved Features
-- ✅ Dark VSCode color scheme
-- ✅ Keyboard shortcuts (arrow keys, space, Cmd+W)
-- ✅ Library button in header
+- **Platform**: macOS only
+- **Panel location**: Editor area only. VSCode does not support WebView in sidebar or bottom panel.
+- **Permissions**: Requires Automation permission for Music.app
 
 ---
 
-*Last updated: 2026-04-13*
+*Last updated: 2026-04-14*
