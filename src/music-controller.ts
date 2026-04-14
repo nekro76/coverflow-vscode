@@ -1,5 +1,8 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 const execPromise = promisify(exec);
 
@@ -10,6 +13,7 @@ export interface Track {
     duration: number;
     hasArtwork?: boolean;
     artworkBase64?: string;
+    artworkMimeType?: string;
 }
 
 export interface Playlist {
@@ -98,11 +102,18 @@ export async function getCurrentTrack(): Promise<Track | null> {
 /**
  * Robustly fetches artwork as Base64.
  */
-export async function getArtworkBase64(): Promise<string | null> {
+export async function getArtwork(): Promise<{ base64: string; mimeType: string } | null> {
+    const tmpDir = os.tmpdir();
+    const tmpFile = path.join(tmpDir, `coverflow_artwork_${Date.now()}.bin`);
+
     const script = `
         tell app "Music"
             if (count of artworks of current track) > 0 then
-                return data of artwork 1 of current track
+                set artworkData to data of artwork 1 of current track
+                set fileRef to open for access POSIX file "${tmpFile}" with write permission
+                write artworkData to fileRef
+                close access fileRef
+                return "${tmpFile}"
             else
                 return ""
             end if
@@ -110,24 +121,43 @@ export async function getArtworkBase64(): Promise<string | null> {
     `;
 
     try {
-        const { stdout } = await execPromise(`osascript -e '${script}'`, {
-            timeout: 15000,
-            maxBuffer: 10 * 1024 * 1024
+        const result = await execPromise(`osascript -e '${script}'`, {
+            timeout: 15000
         });
 
-        const output = stdout.trim();
-        if (!output || output === '') {
+        const filePath = result.stdout.trim();
+        if (!filePath || filePath === '') {
             return null;
         }
 
-        const match = output.match(/«data [A-Za-z]+([0-9A-Fa-f]+)»/);
-        if (match && match[1]) {
-            return Buffer.from(match[1], 'hex').toString('base64');
+        const fileContent = fs.readFileSync(filePath);
+        fs.unlinkSync(filePath);
+
+        if (!fileContent || fileContent.length === 0) {
+            return null;
         }
 
-        return null;
+        // Detect MIME type from magic bytes
+        const magicBytes = fileContent.slice(0, 4);
+        let mimeType = 'image/jpeg';
+
+        if (magicBytes[0] === 0xFF && magicBytes[1] === 0xD8) {
+            mimeType = 'image/jpeg';
+        } else if (magicBytes[0] === 0x89 && magicBytes[1] === 0x50 && magicBytes[2] === 0x4E && magicBytes[3] === 0x47) {
+            mimeType = 'image/png';
+        } else if (magicBytes[0] === 0x47 && magicBytes[1] === 0x49 && magicBytes[2] === 0x46) {
+            mimeType = 'image/gif';
+        } else if (magicBytes[0] === 0x42 && magicBytes[1] === 0x4D) {
+            mimeType = 'image/bmp';
+        }
+
+        const base64 = fileContent.toString('base64');
+        return { base64, mimeType };
     } catch (error) {
         console.error('Artwork fetch error:', error);
+        try {
+            if (fs.existsSync(tmpFile)) fs.unlinkSync(tmpFile);
+        } catch {}
         return null;
     }
 }

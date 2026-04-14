@@ -130,6 +130,8 @@ export function activate(context: vscode.ExtensionContext): void {
                 { placeHolder: 'Choose panel position' }
             );
             
+            if (!column) return;
+
             let viewColumn: vscode.ViewColumn;
             switch (column) {
                 case 'Right (Next to Terminal)':
@@ -145,41 +147,48 @@ export function activate(context: vscode.ExtensionContext): void {
             if (panel) {
                 try {
                     panel.reveal(viewColumn);
+                    return; // Successfully revealed
                 } catch (e) {
-                    console.error('Failed to reveal panel:', e);
-                    // If reveal fails, it might be disposed, so let's try to recreate it
+                    console.error('Failed to reveal panel, likely disposed:', e);
                     panel = undefined;
-                    // Note: In a real scenario, you might want to trigger the 'else' block logic here
-                    // but for simplicity, we'll just let the user click again or handle it in next turn.
                 }
             }
             
+            // Re-check after potential failure in reveal
             if (!panel) {
-                panel = vscode.window.createWebviewPanel(
-                    'coverflowPanel',
-                    'CoverFlow',
-                    viewColumn,
-                    {
-                        enableScripts: true,
-                        retainContextWhenHidden: true,
-                        localResourceRoots: [
-                            vscode.Uri.file(path.join(context.extensionPath, 'media')),
-                            vscode.Uri.file(path.join(context.extensionPath, 'src', 'webview'))
-                        ]
-                    }
-                );
-                
-                panel.webview.html = getPanelHtml(panel.webview, context);
-                
-                panel.webview.onDidReceiveMessage((msg) => {
-                    handlePanelMessage(msg);
-                });
-                
-                panel.onDidDispose(() => {
-                    panel = undefined;
-                });
-                
-                context.subscriptions.push(panel);
+                try {
+                    const newPanel = vscode.window.createWebviewPanel(
+                        'coverflowPanel',
+                        'CoverFlow',
+                        viewColumn,
+                        {
+                            enableScripts: true,
+                            retainContextWhenHidden: true,
+                            localResourceRoots: [
+                                vscode.Uri.file(path.join(context.extensionPath, 'media')),
+                                vscode.Uri.file(path.join(context.extensionPath, 'src', 'webview'))
+                            ]
+                        }
+                    );
+                    
+                    newPanel.webview.html = getPanelHtml(newPanel.webview, context);
+                    
+                    newPanel.webview.onDidReceiveMessage((msg) => {
+                        handlePanelMessage(msg);
+                    });
+                    
+                    newPanel.onDidDispose(() => {
+                        if (panel === newPanel) {
+                            panel = undefined;
+                        }
+                    });
+                    
+                    panel = newPanel;
+                    context.subscriptions.push(panel);
+                } catch (e) {
+                    console.error('Failed to create webview panel:', e);
+                    vscode.window.showErrorMessage('Failed to open CoverFlow panel.');
+                }
             }
         }),
         vscode.commands.registerCommand('coverflow.volumeUp', async () => {
@@ -209,14 +218,18 @@ async function updatePanel(): Promise<void> {
     try {
         const track = await music.getCurrentTrack();
         const isPlaying = await music.isPlaying();
-        const artworkBase64 = track ? await music.getArtworkBase64() : null;
+        const artwork = track ? await music.getArtwork() : null;
         const shuffleEnabled = await music.getShuffleEnabled();
         const repeatMode = await music.getRepeatMode();
         const volume = await music.getVolume();
         
         await panel.webview.postMessage({
             type: 'trackUpdate',
-            track: track ? { ...track, artworkBase64 } : null,
+            track: track ? { 
+                ...track, 
+                artworkBase64: artwork?.base64 || null,
+                artworkMimeType: artwork?.mimeType || 'image/jpeg'
+            } : null,
             isPlaying: isPlaying,
             shuffleEnabled: shuffleEnabled,
             repeatMode: repeatMode,
