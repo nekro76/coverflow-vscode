@@ -26,7 +26,7 @@ Apple Music player for VSCode on macOS.
 ### Option 2: Run in Development Mode
 
 ```bash
-cd coverflow-vscode
+cd cover-music-player
 npm install
 ```
 
@@ -136,17 +136,17 @@ npm run package
 ## Project Structure
 
 ```
-coverflow-vscode/
+cover-music-player/
 ├── src/
 │   ├── extension.ts           ← Entry point
-│   ├── music-controller.ts   ← AppleScript integration
+│   ├── music-controller.ts    ← AppleScript integration
 │   └── webview/
 │       ├── coverflow.html           ← Horizontal layout
 │       └── coverflow-vertical.html  ← Vertical layout
 ├── media/
 │   └── coverflow.css         ← Styles
-├── package.json             ← Manifest
-└── coverflow-vscode-0.0.1.vsix  ← Pre-built extension
+├── package.json              ← Manifest
+└── tests/                    ← Unit tests
 ```
 
 ---
@@ -156,6 +156,24 @@ coverflow-vscode/
 - **Platform**: macOS only
 - **Panel location**: Editor area only. VSCode does not support WebView in sidebar or bottom panel.
 - **Permissions**: Requires Automation permission for Music.app
+
+### Artwork Limitations
+
+| Source | Artwork Status |
+|--------|---------------|
+| **Library songs** | ✅ Full support - artwork displays correctly |
+| **Home/Playlists/Browse** | ⚠️ May not display - Apple Music streams content without caching artwork locally |
+| **Search results** | ⚠️ May not display - same as Home/Playlists |
+
+**Why this happens**: The extension uses AppleScript to read artwork directly from Music.app's local cache. Apple Music streaming tracks don't store artwork locally until explicitly added to your library.
+
+**Fallback behavior**: When artwork cannot be retrieved, a music note placeholder (🎵) is displayed instead of a broken image.
+
+**Future improvement**: MusicKit integration is planned to fetch artwork URLs directly from Apple Music servers, which will provide full artwork support for all playback sources.
+
+---
+
+*Last updated: 2026-04-15*
 
 ---
 
