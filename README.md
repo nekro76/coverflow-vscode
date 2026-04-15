@@ -1,4 +1,4 @@
-# CoverFlow VSCode Extension
+# Cover Music Player VSCode Extension
 
 Apple Music player for VSCode on macOS.
 
@@ -82,12 +82,12 @@ Press **F5** to launch Extension Development Host.
 
 Access via **Command Palette** (Cmd+Shift+P):
 
-- `CoverFlow: Play`
-- `CoverFlow: Pause`
-- `CoverFlow: Toggle Play/Pause`
-- `CoverFlow: Next Track`
-- `CoverFlow: Previous Track`
-- `CoverFlow: Show Panel`
+- `Cover Music Player: Play`
+- `Cover Music Player: Pause`
+- `Cover Music Player: Toggle Play/Pause`
+- `Cover Music Player: Next Track`
+- `Cover Music Player: Previous Track`
+- `Cover Music Player: Show Panel`
 
 **Keyboard Shortcut**: `Cmd+Shift+P` (when editor not focused) - Play/Pause toggle
 

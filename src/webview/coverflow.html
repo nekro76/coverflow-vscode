@@ -50,11 +50,18 @@
                 titleEl.textContent = track.name;
                 artistEl.textContent = track.artist + (track.album ? ' - ' + track.album : '');
                 
-                if (track.artworkBase64) {
+                if (track.artworkBase64 && track.artworkBase64.length > 0) {
                     const mimeType = track.artworkMimeType || 'image/jpeg';
-                    artwork.src = `data:${mimeType};base64,${track.artworkBase64}`;
-                    artwork.style.display = 'block';
-                    placeholder.style.display = 'none';
+                    const dataUrl = `data:${mimeType};base64,${track.artworkBase64}`;
+                    artwork.src = dataUrl;
+                    artwork.onerror = () => {
+                        artwork.style.display = 'none';
+                        placeholder.style.display = 'flex';
+                    };
+                    artwork.onload = () => {
+                        artwork.style.display = 'block';
+                        placeholder.style.display = 'none';
+                    };
                 } else {
                     artwork.style.display = 'none';
                     placeholder.style.display = 'flex';

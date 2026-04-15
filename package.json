@@ -1,12 +1,12 @@
 {
-    "name": "coverflow-vscode",
-    "displayName": "CoverFlow",
-    "description": "Apple Music player with CoverFlow UI for VSCode on macOS",
+    "name": "cover-music-player",
+    "displayName": "Cover Music Player",
+    "description": "Apple Music player with album artwork for VSCode on macOS",
     "version": "0.0.1",
     "publisher": "yourname",
     "repository": {
         "type": "git",
-        "url": "https://github.com/nekro76/coverflow-vscode.git"
+        "url": "https://github.com/nekro76/cover-music-player.git"
     },
     "engines": {
         "vscode": "^1.75.0"
@@ -30,68 +30,68 @@
     "contributes": {
         "commands": [
             {
-                "command": "coverflow.play",
-                "title": "CoverFlow: Play",
-                "category": "CoverFlow"
+                "command": "coverMusicPlayer.play",
+                "title": "Cover Music Player: Play",
+                "category": "Cover Music Player"
             },
             {
-                "command": "coverflow.pause",
-                "title": "CoverFlow: Pause",
-                "category": "CoverFlow"
+                "command": "coverMusicPlayer.pause",
+                "title": "Cover Music Player: Pause",
+                "category": "Cover Music Player"
             },
             {
-                "command": "coverflow.togglePlayPause",
-                "title": "CoverFlow: Toggle Play/Pause",
-                "category": "CoverFlow"
+                "command": "coverMusicPlayer.togglePlayPause",
+                "title": "Cover Music Player: Toggle Play/Pause",
+                "category": "Cover Music Player"
             },
             {
-                "command": "coverflow.next",
-                "title": "CoverFlow: Next Track",
-                "category": "CoverFlow"
+                "command": "coverMusicPlayer.next",
+                "title": "Cover Music Player: Next Track",
+                "category": "Cover Music Player"
             },
             {
-                "command": "coverflow.previous",
-                "title": "CoverFlow: Previous Track",
-                "category": "CoverFlow"
+                "command": "coverMusicPlayer.previous",
+                "title": "Cover Music Player: Previous Track",
+                "category": "Cover Music Player"
             },
             {
-                "command": "coverflow.showPanel",
-                "title": "CoverFlow: Show Panel",
-                "category": "CoverFlow"
+                "command": "coverMusicPlayer.showPanel",
+                "title": "Cover Music Player: Show Panel",
+                "category": "Cover Music Player"
             },
             {
-                "command": "coverflow.volumeUp",
-                "title": "CoverFlow: Volume Up",
-                "category": "CoverFlow"
+                "command": "coverMusicPlayer.volumeUp",
+                "title": "Cover Music Player: Volume Up",
+                "category": "Cover Music Player"
             },
             {
-                "command": "coverflow.volumeDown",
-                "title": "CoverFlow: Volume Down",
-                "category": "CoverFlow"
+                "command": "coverMusicPlayer.volumeDown",
+                "title": "Cover Music Player: Volume Down",
+                "category": "Cover Music Player"
             },
             {
-                "command": "coverflow.toggleShuffle",
-                "title": "CoverFlow: Toggle Shuffle",
-                "category": "CoverFlow"
+                "command": "coverMusicPlayer.toggleShuffle",
+                "title": "Cover Music Player: Toggle Shuffle",
+                "category": "Cover Music Player"
             },
             {
-                "command": "coverflow.toggleRepeat",
-                "title": "CoverFlow: Toggle Repeat",
-                "category": "CoverFlow"
+                "command": "coverMusicPlayer.toggleRepeat",
+                "title": "Cover Music Player: Toggle Repeat",
+                "category": "Cover Music Player"
             }
         ],
         "keybindings": [
             {
-                "command": "coverflow.play",
+                "command": "coverMusicPlayer.play",
                 "key": "cmd+shift+p",
                 "mac": "cmd+shift+p",
                 "when": "!editorFocus"
             }
         ],
         "configuration": {
-            "title": "CoverFlow",
+            "title": "Cover Music Player",
             "properties": {
-                "coverflow.showInStatusBar": {
+                "coverMusicPlayer.showInStatusBar": {
                     "type": "boolean",
                     "default": true,
                     "description": "Show current track in status bar"

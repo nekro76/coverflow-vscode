@@ -79,16 +79,16 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.StatusBarAlignment.Left,
         100
     );
-    statusBarItem.command = 'coverflow.showPanel';
-    statusBarItem.text = '$(music-note) CoverFlow';
-    statusBarItem.tooltip = 'Click to show CoverFlow panel';
+statusBarItem.command = 'coverMusicPlayer.showPanel';
+    statusBarItem.text = '$(music-note) Cover Music Player';
+        statusBarItem.tooltip = 'Click to show Cover Music Player panel';
     statusBarItem.show();
 
     statusBarPrevious = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Left,
         99
     );
-    statusBarPrevious.command = 'coverflow.previous';
+    statusBarPrevious.command = 'coverMusicPlayer.previous';
     statusBarPrevious.text = '$(chevron-left)';
     statusBarPrevious.tooltip = 'Previous Track';
     statusBarPrevious.show();
@@ -97,7 +97,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.StatusBarAlignment.Left,
         98
     );
-    statusBarPlayPause.command = 'coverflow.togglePlayPause';
+    statusBarPlayPause.command = 'coverMusicPlayer.togglePlayPause';
     statusBarPlayPause.text = '$(play)';
     statusBarPlayPause.tooltip = 'Play';
     statusBarPlayPause.show();
@@ -106,7 +106,7 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.StatusBarAlignment.Left,
         97
     );
-    statusBarNext.command = 'coverflow.next';
+    statusBarNext.command = 'coverMusicPlayer.next';
     statusBarNext.text = '$(chevron-right)';
     statusBarNext.tooltip = 'Next Track';
     statusBarNext.show();
@@ -117,67 +117,49 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(statusBarNext);
 
     const commands = [
-        vscode.commands.registerCommand('coverflow.play', async () => {
+        vscode.commands.registerCommand('coverMusicPlayer.play', async () => {
             await music.play();
             await updateAllStatusBars();
             await updatePanel();
         }),
-        vscode.commands.registerCommand('coverflow.pause', async () => {
+        vscode.commands.registerCommand('coverMusicPlayer.pause', async () => {
             await music.pause();
             await updateAllStatusBars();
             await updatePanel();
         }),
-        vscode.commands.registerCommand('coverflow.togglePlayPause', async () => {
+        vscode.commands.registerCommand('coverMusicPlayer.togglePlayPause', async () => {
             await music.togglePlayPause();
             await updateAllStatusBars();
             await updatePanel();
         }),
-        vscode.commands.registerCommand('coverflow.next', async () => {
+        vscode.commands.registerCommand('coverMusicPlayer.next', async () => {
             await music.nextTrack();
             await updateAllStatusBars();
             await updatePanel();
         }),
-        vscode.commands.registerCommand('coverflow.previous', async () => {
+        vscode.commands.registerCommand('coverMusicPlayer.previous', async () => {
             await music.previousTrack();
             await updateAllStatusBars();
             await updatePanel();
         }),
-        vscode.commands.registerCommand('coverflow.showPanel', async () => {
-            const column = await vscode.window.showQuickPick(
-                ['Left (Primary)', 'Right (Next to Terminal)', 'Far Right'],
-                { placeHolder: 'Choose panel position' }
-            );
-            
-            if (!column) return;
-
-            let viewColumn: vscode.ViewColumn;
-            switch (column) {
-                case 'Right (Next to Terminal)':
-                    viewColumn = vscode.ViewColumn.Two;
-                    break;
-                case 'Far Right':
-                    viewColumn = vscode.ViewColumn.Three;
-                    break;
-                default:
-                    viewColumn = vscode.ViewColumn.One;
-            }
+        vscode.commands.registerCommand('coverMusicPlayer.showPanel', async () => {
+            const viewColumn = vscode.ViewColumn.Two;
 
             if (panel) {
                 try {
                     panel.reveal(viewColumn);
-                    return; // Successfully revealed
+                    return;
                 } catch (e) {
                     console.error('Failed to reveal panel, likely disposed:', e);
                     panel = undefined;
                 }
             }
             
-            // Re-check after potential failure in reveal
             if (!panel) {
                 try {
                     const newPanel = vscode.window.createWebviewPanel(
-                        'coverflowPanel',
-                        'CoverFlow',
+                        'coverMusicPlayerPanel',
+                        'Cover Music Player',
                         viewColumn,
                         {
                             enableScripts: true,
@@ -205,20 +187,20 @@ export function activate(context: vscode.ExtensionContext): void {
                     context.subscriptions.push(panel);
                 } catch (e) {
                     console.error('Failed to create webview panel:', e);
-                    vscode.window.showErrorMessage('Failed to open CoverFlow panel.');
+                    vscode.window.showErrorMessage('Failed to open Cover Music Player panel.');
                 }
             }
         }),
-        vscode.commands.registerCommand('coverflow.volumeUp', async () => {
+        vscode.commands.registerCommand('coverMusicPlayer.volumeUp', async () => {
             await music.volumeUp();
         }),
-        vscode.commands.registerCommand('coverflow.volumeDown', async () => {
+        vscode.commands.registerCommand('coverMusicPlayer.volumeDown', async () => {
             await music.volumeDown();
         }),
-        vscode.commands.registerCommand('coverflow.toggleShuffle', async () => {
+        vscode.commands.registerCommand('coverMusicPlayer.toggleShuffle', async () => {
             await music.toggleShuffle();
         }),
-        vscode.commands.registerCommand('coverflow.toggleRepeat', async () => {
+        vscode.commands.registerCommand('coverMusicPlayer.toggleRepeat', async () => {
             await music.toggleRepeat();
         })
     ];

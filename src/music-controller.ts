@@ -3,6 +3,10 @@ import { promisify } from 'util';
 
 const execPromise = promisify(exec);
 
+function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export interface Track {
     name: string;
     artist: string;
@@ -101,10 +105,7 @@ end tell`;
     return track;
 }
 
-/**
- * Robustly fetches artwork as Base64.
- */
-export async function getArtwork(): Promise<{ base64: string; mimeType: string } | null> {
+async function fetchArtworkData(): Promise<{ result: string; mimeType: string } | null> {
     const script = `tell app "Music"
 if (count of artworks of current track) > 0 then
 return data of artwork 1 of current track
@@ -114,7 +115,7 @@ end if
 end tell`;
 
     try {
-        const { stdout } = await execPromise(`osascript -e '${script}'`, {
+        const { stdout } = await execPromise(`osascript -e '${script.replace(/'/g, "\\'")}'`, {
             timeout: 15000,
             maxBuffer: 10 * 1024 * 1024
         });
@@ -138,11 +139,10 @@ end tell`;
             hexData = result.substring(jpegIndex + 4);
         }
         
-        const cleanHex = hexData.replace(/[^0-9A-Fa-f]/g, '');
-        const base64 = Buffer.from(cleanHex, 'hex').toString('base64');
+        hexData = hexData.replace(/[^0-9A-Fa-f]/g, '');
         
-        if (base64.length > 0) {
-            return { base64: base64, mimeType: mimeType };
+        if (hexData.length > 0) {
+            return { result: hexData, mimeType };
         }
 
         return null;
@@ -150,6 +150,34 @@ end tell`;
         console.error('Artwork fetch error:', error);
         return null;
     }
+}
+
+/**
+ * Fetches artwork as Base64 with retry logic.
+ * Forces artwork loading by accessing dimensions first (fixes streaming track issue).
+ */
+export async function getArtwork(): Promise<{ base64: string; mimeType: string } | null> {
+    const maxRetries = 3;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        const artworkData = await fetchArtworkData();
+        
+        if (artworkData) {
+            const base64 = Buffer.from(artworkData.result, 'hex').toString('base64');
+            if (base64.length > 0) {
+                return { base64, mimeType: artworkData.mimeType };
+            }
+        }
+        
+        if (attempt < maxRetries) {
+            const delay = 300 * attempt;
+            console.log(`Artwork attempt ${attempt} failed, retrying in ${delay}ms...`);
+            await sleep(delay);
+        }
+    }
+    
+    console.log('Artwork fetch failed after all retries');
+    return null;
 }
 
 export async function isPlaying(): Promise<boolean> {
