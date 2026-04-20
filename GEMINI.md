@@ -1,21 +1,21 @@
-# GEMINI.md - CoverFlow VSCode Extension
+# GEMINI.md - Cover Music Player VSCode Extension
 
-This file provides foundational context and instructions for the Gemini CLI agent working on the CoverFlow VSCode extension project.
+This file provides foundational context and instructions for the Gemini CLI agent working on the Cover Music Player VSCode extension project.
 
 ## Project Overview
 
 | Attribute | Value |
 |-----------|-------|
-| **Project Name** | CoverFlow VSCode |
+| **Project Name** | Cover Music Player VSCode |
 | **Type** | VSCode Extension (macOS only) |
-| **Goal** | Control Apple Music from VSCode with a CoverFlow UI |
+| **Goal** | Control Apple Music from VSCode with a cover music player UI |
 | **Status** | Phase 2.5 Infrastructure (Refactoring & Async) |
 
 ## Technical Stack Refinement
 
 - **Asynchronous Execution:** Moving from `execSync` to `exec` for all AppleScript calls to ensure smooth UI.
 - **Native Artwork Pipeline:** Using AppleScript `as «class PNG »` for robust image fetching.
-- **Externalized UI:** HTML/CSS/JS for CoverFlow are being moved from strings in `extension.ts` to dedicated files.
+- **Externalized UI:** HTML/CSS/JS for cover music player are being moved from strings in `extension.ts` to dedicated files.
 
 ## Workflow & Agents (Current Phase)
 
@@ -40,7 +40,7 @@ This project follows an agent-based workflow. When acting as one of these roles,
 ## Architecture
 
 ```
-coverflow-vscode/
+cover-music-player/
 ├── src/
 │   ├── extension.ts        # Entry point
 │   ├── music-controller.ts # AppleScript interface
@@ -54,8 +54,8 @@ coverflow-vscode/
 
 1. **AppleScript Dependency:** The extension relies on macOS `osascript` to control Music.app. It is **macOS only**.
 2. **No External Dependencies for Music Control:** Do not introduce external libraries for Music.app control; stick to `osascript`.
-3. **WebView UI:** The primary UI (CoverFlow) is implemented via VSCode WebViews using HTML/CSS/JS.
-4. **Animation Logic:** Reuse/adapt animation logic from the sibling project `coverflow` (SwiftUI) where applicable for the web-based implementation.
+3. **WebView UI:** The primary UI (cover music player) is implemented via VSCode WebViews using HTML/CSS/JS.
+4. **Animation Logic:** Reuse/adapt animation logic from the sibling project `cover-music-player` (SwiftUI) where applicable for the web-based implementation.
 
 ## Features & Roadmap
 
@@ -68,7 +68,7 @@ coverflow-vscode/
 - Side panel with HTML WebView.
 - Track info and album artwork display.
 
-### Phase 3 (CoverFlow) - PENDING
+### Phase 3 (Cover Music Player) - PENDING
 - 3D CoverFlow carousel implementation.
 - Spring animations and drag gesture navigation.
 
@@ -79,7 +79,7 @@ coverflow-vscode/
 ## Success Metrics
 
 - **MVP:** Functional playback control and status bar updates.
-- **Full Success:** Smooth 3D CoverFlow carousel and high user engagement on the VSCode Marketplace.
+- **Full Success:** Smooth 3D cover music player carousel and high user engagement on the VSCode Marketplace.
 
 ---
 *Last updated: 2026-04-13*
