@@ -21,7 +21,7 @@ Apple Music player for VSCode on macOS.
 2. Go to **Extensions** (Cmd+Shift+X)
 3. Click the **...** menu (top right)
 4. Select **Install from VSIX**
-5. Choose: `coverflow-vscode-0.0.1.vsix`
+5. Choose: `cover-music-player-0.0.1.vsix`
 
 ### Option 2: Run in Development Mode
 
@@ -74,7 +74,7 @@ Press **F5** to launch Extension Development Host.
 └─────────────────────────┘
 ```
 
-**To change layout**: VSCode Settings → `coverflow.panelLayout` → select `horizontal` or `vertical`
+**To change layout**: VSCode Settings → `coverMusicPlayer.panelLayout` → select `horizontal` or `vertical`
 
 ---
 
@@ -105,7 +105,7 @@ Access via **Command Palette** (Cmd+Shift+P):
 - Try pressing F5 to debug
 
 ### Status bar not showing
-- Check `coverflow.showInStatusBar` setting is enabled (default: true)
+- Check `coverMusicPlayer.showInStatusBar` setting is enabled (default: true)
 
 ---
 
@@ -113,8 +113,8 @@ Access via **Command Palette** (Cmd+Shift+P):
 
 | Setting | Default | Description |
 |---------|---------|------------|
-| `coverflow.panelLayout` | `horizontal` | Panel layout: `horizontal` or `vertical` |
-| `coverflow.showInStatusBar` | `true` | Show current track in status bar |
+| `coverMusicPlayer.panelLayout` | `horizontal` | Panel layout: `horizontal` or `vertical` |
+| `coverMusicPlayer.showInStatusBar` | `true` | Show current track in status bar |
 
 ---
 
@@ -141,10 +141,9 @@ cover-music-player/
 │   ├── extension.ts           ← Entry point
 │   ├── music-controller.ts    ← AppleScript integration
 │   └── webview/
-│       ├── coverflow.html           ← Horizontal layout
-│       └── coverflow-vertical.html  ← Vertical layout
-├── media/
-│   └── coverflow.css         ← Styles
+│       ├── cover-music-player.html     ← Horizontal layout
+│       └── cover-music-player-vertical.html  ← Vertical layout
+│   └── cover-music-player.css     ← Styles
 ├── package.json              ← Manifest
 └── tests/                    ← Unit tests
 ```

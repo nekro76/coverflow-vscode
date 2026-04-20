@@ -261,10 +261,10 @@ async function handlePanelMessage(msg: { command: string; value?: any }): Promis
 }
 
 function getPanelHtml(webview: vscode.Webview, context: vscode.ExtensionContext): string {
-    const htmlPath = path.join(context.extensionPath, 'src', 'webview', 'coverflow.html');
+    const htmlPath = path.join(context.extensionPath, 'src', 'webview', 'cover-music-player.html');
     let html = fs.readFileSync(htmlPath, 'utf8');
 
-    const stylePath = vscode.Uri.file(path.join(context.extensionPath, 'media', 'coverflow.css'));
+    const stylePath = vscode.Uri.file(path.join(context.extensionPath, 'media', 'cover-music-player.css'));
     const styleUri = webview.asWebviewUri(stylePath);
 
     const nonce = getNonce();
